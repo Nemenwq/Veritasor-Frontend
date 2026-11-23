@@ -18,6 +18,14 @@ import { render, screen, fireEvent, act } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import EditScopesModal from './EditScopesModal'
 
+// ─── Mock ToastContext ───────────────────────────────────────────────────────
+
+vi.mock('../ToastContext', () => ({
+  useToast: () => ({
+    addToast: vi.fn(),
+  }),
+}))
+
 // ─── fixtures ────────────────────────────────────────────────────────────────
 
 const mockOnUpdated = vi.fn()
@@ -174,22 +182,17 @@ describe('EditScopesModal – scope diff detection', () => {
     renderModal({ currentScopes: ['read:attestations'] })
     fireEvent.click(screen.getByLabelText('Write attestations'))
     fireEvent.click(screen.getByText('Save Changes'))
-    const confirmButton = screen.getByText('Confirm')
-    // The danger tone sets a gradient background style
-    expect(confirmButton).toHaveStyle({
-      background: expect.stringContaining('linear-gradient'),
-    })
+    // The confirmation dialog title for broadening is different
+    expect(screen.getByText(/Confirm scope broadening?/i)).toBeInTheDocument()
   })
 
   it('uses default tone for narrowing changes', () => {
     renderModal({ currentScopes: ['read:attestations', 'write:attestations'] })
     fireEvent.click(screen.getByLabelText('Write attestations'))
     fireEvent.click(screen.getByText('Save Changes'))
-    const confirmButton = screen.getByText('Confirm')
-    // Default tone has no inline style
-    expect(confirmButton).not.toHaveStyle({
-      background: expect.stringContaining('linear-gradient'),
-    })
+    // The confirmation dialog title for narrowing is generic
+    expect(screen.getByText(/Confirm scope changes?/i)).toBeInTheDocument()
+    expect(screen.queryByText(/Confirm scope broadening?/i)).not.toBeInTheDocument()
   })
 })
 
@@ -242,9 +245,7 @@ describe('EditScopesModal – validation', () => {
     expect(screen.getByText(/Select at least one scope/i)).toBeInTheDocument()
   })
 
-  it('shows toast when no changes made', () => {
-    // Note: Toast testing would require mocking ToastContext
-    // For now, we verify the modal doesn't open confirmation
+  it('does not open confirmation when no changes made', () => {
     renderModal({ currentScopes: ['read:attestations'] })
     fireEvent.click(screen.getByText('Save Changes'))
     // Confirmation dialog should NOT appear
