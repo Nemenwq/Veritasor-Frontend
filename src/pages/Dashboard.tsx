@@ -7,6 +7,7 @@ import { useViewportObserver } from '../hooks/useViewportObserver'
 import { useToast } from '../components/ToastContext'
 import { useAttestations } from '../state/attestations'
 import { DEFAULT_TRIGGER_DETAILS } from '../state/attestationMocks'
+import { track } from '../analytics'
 
 const METRICS = [
   { label: 'Total Revenue', value: '$84,320', sub: 'YTD 2026' },
@@ -71,6 +72,11 @@ export default function Dashboard() {
     setAttestError(null)
     try {
       await trigger(DEFAULT_TRIGGER_DETAILS)
+      track('attestation_created', {
+        source: DEFAULT_TRIGGER_DETAILS.source,
+        period: DEFAULT_TRIGGER_DETAILS.period,
+        recordCount: DEFAULT_TRIGGER_DETAILS.recordCount,
+      })
       addToast('Attestation submitted successfully.', 'success')
       setModalOpen(false)
     } catch (err) {

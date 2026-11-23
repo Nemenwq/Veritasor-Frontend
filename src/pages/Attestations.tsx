@@ -16,6 +16,7 @@ import {
   useSchedules,
   type ScheduleRule,
 } from '../store/scheduleStore'
+import { track } from '../analytics'
 
 export const PAGE_SIZE = 50
 
@@ -821,6 +822,11 @@ export default function Attestations() {
 
     try {
       await trigger(DEFAULT_TRIGGER_DETAILS)
+      track('attestation_created', {
+        source: DEFAULT_TRIGGER_DETAILS.source,
+        period: DEFAULT_TRIGGER_DETAILS.period,
+        recordCount: DEFAULT_TRIGGER_DETAILS.recordCount,
+      })
       addToast('Attestation submitted successfully.', 'success')
       setModalOpen(false)
     } catch (err) {

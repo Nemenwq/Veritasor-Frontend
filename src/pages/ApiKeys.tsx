@@ -5,6 +5,7 @@ import RotationReminderBanner from '../components/api-keys/RotationReminderBanne
 import type { ApiKey, ApiKeyStatus } from '../components/api-keys/apiKeyTypes'
 import { useToast } from '../components/ToastContext'
 import { useMutation } from '../hooks/useMutation'
+import { track } from '../analytics'
 
 // 14-day lead-time window relative to today (2026-07-28)
 const today = new Date('2026-07-28T10:08:33Z')
@@ -135,6 +136,11 @@ export default function ApiKeys() {
         : 'vtsr_live_????????'
       const createdKey = prev.find((k) => k.id === keyId)
       if (createdKey) return prev
+
+      track('api_key_created', {
+        keyId,
+        scopes: ['read:attestations'],
+      })
 
       return [
         {
